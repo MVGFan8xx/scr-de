@@ -219,11 +219,7 @@ client.on('messageCreate', async message => {
     message.delete();
     if (message.member.id == "424895323660484610" && parseFloat(args[1]) > 1) {
       if (parseFloat(args[1]) > 100) {
-        let c = 0;
-        do {
         message.channel.bulkDelete(100);
-        c = c + 1
-      } while (c <= (parseFloat(args[1]) / 100) + 1)
       } else {
         message.channel.bulkDelete(args[1]);
       }
