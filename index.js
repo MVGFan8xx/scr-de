@@ -43,6 +43,33 @@ app.listen(port, () => {
   console.log(`Example app listening on port ${port}`)
 })
 
+async function insufficientPermission(requiredPermission) {
+  let embed = new discord.EmbedBuilder()
+    .setTitle("Du hast keine Berechtigung diesen Befehl auszuführen")
+    .setColor("Red")
+    .addFields(
+      {
+        name: "Benötigte Berechtigung",
+        value: requiredPermission
+      }
+    );
+  return embed
+}
+
+async function errorEmbed(errTitle, errContent) {
+  let embed = new discord.EmbedBuilder()
+    .setTitle("Ein Fehler ist aufgetreten.")
+    .setDescription(`Es ist ein Fehler aufgetreten. **${errTitle || " "}**`)
+    .setColor("Red")
+    .addFields(
+      {
+        name: "Fehler Code",
+        value: errContent
+      }
+    );
+  return embed
+}
+
 client.on("voiceStateUpdate", async (oldstate, newstate) => {
   let scrdeguild = await client.guilds.fetch("1357822154200317963")
   let vcactiverole = await scrdeguild.roles.fetch("1367413944741924895")
@@ -245,16 +272,6 @@ client.on('messageCreate', async message => {
     let u = message.mentions.members.first() || await message.guild.members.fetch(args[1] || "424895323660484610");
     let r = args.slice(2).join(" ") || "Kein Grund angegeben";
     if (!message.member.permissions.has("BanMembers")) {
-      let embed = new discord.EmbedBuilder()
-        .setTitle("Nicht ausreichende Rechte")
-        .setColor("Red")
-        .setDescription("Du hast nicht die erforderlichen Rechte um diesen Command durchzuführen")
-        .addFields(
-          {
-            name: "Benötigte Rechte",
-            value: "Ban Members"
-          }
-        )
       let embed2 = new discord.EmbedBuilder()
         .setTitle("Nicht ausreichende Rechte")
         .setColor("Red")
@@ -270,22 +287,12 @@ client.on('messageCreate', async message => {
           }
         )
         .setThumbnail(message.author.displayAvatarURL({ dynamic: true }));
-      message.reply({ embeds: [embed] });
+      message.reply({ embeds: [await insufficientPermission("Ban Members")] });
       return spamLogs.send({ embeds: [embed2] });
     }
     console.log(u)
     if (u == undefined || u == null || u.id == "424895323660484610" || u.id == message.author.id) {
-      let embed = new discord.EmbedBuilder()
-        .setTitle("Falsche Inhalte")
-        .setColor("Red")
-        .setDescription("Du musst auch angeben wen du bannen möchtest.")
-        .addFields(
-          {
-            name: "Wie schaff ich das?",
-            value: "Entweder seine Nutzer-Id nutzen oder ihn erwähnen."
-          }
-        )
-      return message.reply({ embeds: [embed] });
+      return message.reply({ embeds: [await errorEmbed("Nicht ausreichende Angaben", "Du musst auch angeben welchen Ban du anschauen willst \n Dafür kannst du jemanden erwähnen oder seine ID einfügen.")] })
     }
     try {
       let caseNum = 0;
@@ -303,7 +310,8 @@ client.on('messageCreate', async message => {
           _id: caseNum,
           userId: u.id,
           reason: r,
-          time: Date.now()
+          time: Date.now(),
+          mod: message.author.id
         }
       );
 
@@ -401,9 +409,9 @@ client.on('messageCreate', async message => {
     }
   }
   if (isCommand("version", message)) {
-  /*  if (message.author.id != "424895323660484610") {
-      return message.reply("> :x: Nur Brendon darf diesen Command ausführen. Dieser ist ja auch nur für Debug da.");
-    } */
+    /*  if (message.author.id != "424895323660484610") {
+        return message.reply("> :x: Nur Brendon darf diesen Command ausführen. Dieser ist ja auch nur für Debug da.");
+      } */
     if (!message.guild) {
       return
     }
@@ -430,5 +438,65 @@ client.on('messageCreate', async message => {
       )
       .setColor("Blurple");
     message.reply({ embeds: [embed] })
+  }
+  if (isCommand("viewBan", message)) {
+    // Permission view
+    if (message.member.roles.cache.get("1357822938878972085") || message.member.roles.cache.get("1357827807442505748")) {
+      let caseNum = args[1];
+      if (!caseNum) {
+        return message.reply({ embeds: [await errorEmbed("Nicht ausreichende Angaben", "Du musst auch angeben welchen Ban du anschauen willst")] })
+      }
+      let query = { _id: parseInt(caseNum) };
+      let data = await banDB.findOne(query);
+      let embed = new discord.EmbedBuilder()
+      if (!data) {
+        embed.setColor("DarkRed")
+          .setTitle("Keine Einträge gefunden")
+          .setDescription(`Ich habe keine Einträge mit der Id ${caseNum} gefunden.`)
+        message.reply({ embeds: [embed] });
+      } else {
+        let u = data.userId;
+        let r = data.reason;
+        let t = data.time;
+        let m = data.mod;
+
+        embed.setColor("Green")
+          .setTitle(`Ban Log für Ban #${caseNum}`)
+          .addFields(
+            {
+              name: "Nummer",
+              value: caseNum,
+              inline: true
+            },
+            {
+              name: "Nutzer",
+              value: `<@${u}>`,
+              inline: true
+            },
+            {
+              name: "Nutzer Id",
+              value: u,
+              inline: true
+            },
+            {
+              name: "Moderator",
+              value: `<@${m}>`,
+              inline: true
+            },
+            {
+              name: "Grund",
+              value: r
+            },
+            {
+              name: "Zeitpunkt",
+              value: `<t:${t}:F> (<t:${t}:R>)`,
+              inline: true
+            }
+          )
+        message.reply({embeds: [embed]});
+      }
+    } else {
+      return message.reply({ embeds: [await insufficientPermission("Supervisor/Manager Rolle")] })
+    }
   }
 })
