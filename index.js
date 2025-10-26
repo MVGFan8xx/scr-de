@@ -384,7 +384,11 @@ client.on('messageCreate', async message => {
     ]
     let chance = Math.random()
     let item = t[Math.round(chance * t.length)];
-    message.reply(item || "Hab kein Satz gefunden");
+    if (message.author.id == "779388707153117235") {
+      message.reply("Hallo Goonli");
+    } else {
+      message.reply(item || "Hab kein Satz gefunden");
+    }
     if (chance < 0.05) {
       let chn = [
         "1367524849316134993",
@@ -395,35 +399,35 @@ client.on('messageCreate', async message => {
       fetchedChn.send({ content: `<@${message.author.id}>` });
     }
   }
-  if(isCommand("version",message)){
-    if(message.author.id != "424895323660484610"){
+  if (isCommand("version", message)) {
+    if (message.author.id != "424895323660484610") {
       return message.reply("> :x: Nur Brendon darf diesen Command ausführen. Dieser ist ja auch nur für Debug da.");
     }
-    if(!message.guild){
+    if (!message.guild) {
       return
     }
     let v = version.version;
     let commit = version.commit;
     let d = version.date;
     let embed = new discord.EmbedBuilder()
-    .addFields(
-      {
-        name: "Version",
-        value: v,
-        inline: true
-      },
-      {
-        name: "Commit",
-        value: commit,
-        inline: true
-      },
-      {
-        name: "Zeitpunkt des Commits",
-        value: d,
-        inline: true
-      }
-    )
-    .setColor("Blurple");
-    message.reply({embeds: [embed]})
+      .addFields(
+        {
+          name: "Version",
+          value: v,
+          inline: true
+        },
+        {
+          name: "Commit",
+          value: commit,
+          inline: true
+        },
+        {
+          name: "Zeitpunkt des Commits",
+          value: d,
+          inline: true
+        }
+      )
+      .setColor("Blurple");
+    message.reply({ embeds: [embed] })
   }
 })
