@@ -310,7 +310,7 @@ client.on('messageCreate', async message => {
           _id: caseNum,
           userId: u.id,
           reason: r,
-          time: Date.now(),
+          time: Math.round(Date.now()/1000),
           mod: message.author.id
         }
       );
