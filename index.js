@@ -4,10 +4,10 @@ const dotenv = require("dotenv").config();
 const client = new discord.Client({ intents: ["GuildMessages", "GuildMembers", "Guilds", "MessageContent", "GuildVoiceStates"], partials: ["MESSAGE", "CHANNEL", "REACTION", "GUILDMEMBER"] });
 let token = process.env.TOKEN;
 let MONGOKEY = process.env.MONGOKEY;
-const bilder = require("./bilder.json")
+const bilder = require("./bilder.json");
 const maggus = bilder.maggus;
 const rainer = bilder.rainer;
-
+const version = require("./version.json");
 client.login(token)
 
 const mongoClient = new mongodb.MongoClient(MONGOKEY);
@@ -379,7 +379,8 @@ client.on('messageCreate', async message => {
       "Frag doch einfach noch mal!",
       "Nein, hier ist Patrick",
       "Nein.",
-      "Ihr habt alle ein Gambling-Problem"
+      "Ihr habt alle ein Gambling-Problem",
+      "<@603610519857004544>"
     ]
     let chance = Math.random()
     let item = t[Math.round(chance * t.length)];
@@ -393,5 +394,36 @@ client.on('messageCreate', async message => {
       let fetchedChn = await client.channels.fetch(selChn);
       fetchedChn.send({ content: `<@${message.author.id}>` });
     }
+  }
+  if(isCommand("version",message)){
+    if(message.author.id != "424895323660484610"){
+      return message.reply("> :x: Nur Brendon darf diesen Command ausführen. Dieser ist ja auch nur für Debug da.");
+    }
+    if(!message.guild){
+      return
+    }
+    let v = version.version;
+    let commit = version.commit;
+    let d = version.date;
+    let embed = new discord.EmbedBuilder()
+    .addFields(
+      {
+        name: "Version",
+        value: v,
+        inline: true
+      },
+      {
+        name: "Commit",
+        value: commit,
+        inline: true
+      },
+      {
+        name: "Zeitpunkt des Commits",
+        value: d,
+        inline: true
+      }
+    )
+    .setColor("Blurple");
+    message.reply({embeds: [embed]})
   }
 })
