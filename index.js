@@ -1,6 +1,6 @@
 let discord = require("discord.js")
 let mongodb = require("mongodb")
-const dotenv = require("dotenv").config();
+require("dotenv").config();
 const client = new discord.Client({ intents: ["GuildMessages", "GuildMembers", "Guilds", "MessageContent", "GuildVoiceStates"], partials: ["MESSAGE", "CHANNEL", "REACTION", "GUILDMEMBER"] });
 let token = process.env.TOKEN;
 let MONGOKEY = process.env.MONGOKEY;
@@ -14,7 +14,7 @@ const mongoClient = new mongodb.MongoClient(MONGOKEY);
 
 // DATABASE Definitions
 const database = mongoClient.db("SCRDE");
-const callihate = database.collection("callihate");
+//const callihate = database.collection("callihate");
 const banDB = database.collection("bans");
 
 //Settings
@@ -27,6 +27,7 @@ client.on("clientReady", async readyclient => {
     await mongoClient.db("admin").command({ ping: 1 });
     console.log("MongoClient connected")
   } catch (err) {
+    console.log(err);
   }
 })
 
@@ -400,9 +401,9 @@ client.on('messageCreate', async message => {
     }
   }
   if (isCommand("version", message)) {
-    if (message.author.id != "424895323660484610") {
+  /*  if (message.author.id != "424895323660484610") {
       return message.reply("> :x: Nur Brendon darf diesen Command ausführen. Dieser ist ja auch nur für Debug da.");
-    }
+    } */
     if (!message.guild) {
       return
     }
