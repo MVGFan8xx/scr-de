@@ -1,11 +1,36 @@
-name: Deploy Discord Bot to EC2
+name: CI + Deploy
+
 on:
   push:
-    branches: [ "main" ]
+    branches: [ "main", "dev" ]
+  pull_request:
+
+concurrency:
+  group: deploy-${{ github.ref }}
+  cancel-in-progress: true
 
 jobs:
+  ci:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: 'npm'
+      - run: npm ci
+      # Lint (falls kein npm script vorhanden, fallback auf npx eslint .)
+      - run: npm run lint || npx eslint .
+      # Syntax-Check Hauptentry
+      - run: node --check index.js
+      # Tests (falls vorhanden)
+      - run: npm test --if-present
+
   deploy:
     needs: ci
+    if: github.ref == 'refs/heads/main'
     runs-on: ubuntu-latest
     steps:
       - name: Add server to known_hosts
@@ -14,7 +39,6 @@ jobs:
           ssh-keygen -R "${{ secrets.SERVER_HOST }}" 2>/dev/null || true
           ssh-keyscan -t ed25519 -H ${{ secrets.SERVER_HOST }} >> ~/.ssh/known_hosts
 
-
       - name: Deploy via SSH (git pull + pm2 reload)
         uses: appleboy/ssh-action@v1.0.3
         with:
@@ -22,13 +46,13 @@ jobs:
           username: ec2-user
           key: ${{ secrets.SERVER_SSH_KEY }}
           script: |
-            set -e
+            set -Eeuo pipefail
             cd ~/scr-de || git clone https://github.com/MVGFan8xx/scr-de.git ~/scr-de
             cd ~/scr-de
             git fetch origin main --tags --force
             git reset --hard origin/main
 
-            # Version-Datei (optional)
+            # Version-Datei
             VERSION=$(git describe --tags --abbrev=0 2>/dev/null || echo "v0.0.0")
             COMMIT=$(git rev-parse --short HEAD)
             DATE=$(date -u +%Y-%m-%dT%H:%M:%SZ)
@@ -36,5 +60,7 @@ jobs:
 
             npm ci || npm install
             npm run build || true
+
+            command -v pm2 >/dev/null 2>&1 || sudo npm i -g pm2
             pm2 reload discord-bot || pm2 start index.js --name "discord-bot"
             pm2 save
