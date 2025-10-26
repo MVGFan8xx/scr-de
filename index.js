@@ -302,7 +302,12 @@ client.on('messageCreate', async message => {
           _id: caseNum,
           userId: u.id,
           reason: r,
+<<<<<<< Updated upstream
           time: Date.now()
+=======
+          time: Math.round(Date.now()/1000),
+          mod: message.author.id
+>>>>>>> Stashed changes
         }
       );
 
