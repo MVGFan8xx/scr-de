@@ -39,6 +39,7 @@ client.once("clientReady", async() =>{
     {name: "Markus Söder singt Sweet Caroline", type: discord.ActivityType.Listening}
   ]
   let i = 0;
+  client.user.setActivity(activities[i]);
   setInterval(() => {
     i = (i+1)%activities.length;
     let act = activities[i];
