@@ -10,8 +10,9 @@ jobs:
       - name: Add server to known_hosts
         run: |
           mkdir -p ~/.ssh
-          ssh-keygen -R ${{ secrets.SERVER_HOST }} || true
+          ssh-keygen -R "${{ secrets.SERVER_HOST }}" 2>/dev/null || true
           ssh-keyscan -t ed25519 -H ${{ secrets.SERVER_HOST }} >> ~/.ssh/known_hosts
+
 
       - name: Deploy via SSH (git pull + pm2 reload)
         uses: appleboy/ssh-action@v1.0.3
