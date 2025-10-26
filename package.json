@@ -4,7 +4,9 @@
   "description": "",
   "main": "index.js",
   "scripts": {
-    "test": "echo \"Keine Tests spezifiziert.\""
+    "start": "node index.js",
+    "lint": "eslint .",
+    "test": "node --check index.js && npm run lint"
   },
   "author": "",
   "license": "ISC",
