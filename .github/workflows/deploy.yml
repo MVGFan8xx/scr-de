@@ -5,6 +5,7 @@ on:
 
 jobs:
   deploy:
+    needs: ci
     runs-on: ubuntu-latest
     steps:
       - name: Add server to known_hosts
