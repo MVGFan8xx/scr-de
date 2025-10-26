@@ -40,7 +40,7 @@ client.once("clientReady", async() =>{
   ]
   let i = 0;
   setInterval(() => {
-    index = (i+1)%activities.length;
+    i = (i+1)%activities.length;
     let act = activities[i];
     client.user.setActivity(act);
   }, 30 * 1000)
