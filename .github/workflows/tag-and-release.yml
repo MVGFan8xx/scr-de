@@ -1,0 +1,21 @@
+name: Tag & Release on main
+
+on:
+  push:
+    branches: [ "main" ]
+
+jobs:
+  tag:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      # Erzeugt automatisch das nächste SemVer-Tag + Release Notes
+      # Nutzt (optional) Conventional Commits, sonst bump = patch
+      - name: Create tag & release
+        uses: mathieudutour/github-tag-action@v6.1
+        with:
+          github_token: ${{ secrets.GITHUB_TOKEN }}
+          release_branches: main
+          default_bump: patch            # patch/minor/major – kannst du ändern
+          tag_prefix: "v"
