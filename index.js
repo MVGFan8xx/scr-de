@@ -303,8 +303,11 @@ client.on('messageCreate', async message => {
           userId: u.id,
           reason: r,
 <<<<<<< Updated upstream
+<<<<<<< Updated upstream
           time: Date.now()
 =======
+=======
+>>>>>>> Stashed changes
           time: Math.round(Date.now()/1000),
           mod: message.author.id
 >>>>>>> Stashed changes
