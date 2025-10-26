@@ -31,6 +31,22 @@ client.on("clientReady", async readyclient => {
   }
 })
 
+client.once("clientReady", async() =>{
+  let activities = [
+    {name: "commands", type: discord.ActivityType.Listening},
+    {name: "Drachenlord", type: discord.ActivityType.Watching},
+    {name: "#general", type: discord.ActivityType.Watching},
+    {name: "Markus Söder singt Sweet Caroline", type: discord.ActivityType.Listening}
+  ]
+  let i = 0;
+  client.user.setActivity(activities[i]);
+  setInterval(() => {
+    i = (i+1)%activities.length;
+    let act = activities[i];
+    client.user.setActivity(act);
+  }, 30 * 1000)
+})
+
 const express = require('express')
 const app = express()
 const port = process.env.PORT || 1000
