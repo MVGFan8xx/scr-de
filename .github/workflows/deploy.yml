@@ -2,7 +2,7 @@ name: Deploy Discord Bot to EC2
 
 on:
   push:
-    branches: [ "main" ]  # passe an, falls dein Standard-Branch anders heißt
+    branches: [ "main" ]
 
 jobs:
   deploy:
@@ -14,29 +14,31 @@ jobs:
           mkdir -p ~/.ssh
           ssh-keyscan -H ${{ secrets.SERVER_HOST }} >> ~/.ssh/known_hosts
 
-            - name: Deploy via SSH (git pull + pm2 reload)
+      - name: Deploy via SSH (git pull + pm2 reload)
         uses: appleboy/ssh-action@v1.0.3
         with:
           host: ${{ secrets.SERVER_HOST }}
-          username: ec2-user
+          username: ec2-user        # bei Ubuntu: ubuntu
           key: ${{ secrets.SERVER_SSH_KEY }}
           script: |
+            # Repo ablegen (öffentliches Repo -> HTTPS)
             cd ~/scr-de || git clone https://github.com/MVGFan8xx/scr-de.git ~/scr-de
             cd ~/scr-de
 
-            git fetch origin main
+            # Tags & main sauber holen
+            git fetch origin main --tags --force
             git reset --hard origin/main
 
-            # --- Version-Datei ---
+            # Version-Datei schreiben
             VERSION=$(git describe --tags --abbrev=0 2>/dev/null || echo "v0.0.0")
             COMMIT=$(git rev-parse --short HEAD)
             DATE=$(date -u +%Y-%m-%dT%H:%M:%SZ)
             echo "{\"version\":\"$VERSION\",\"commit\":\"$COMMIT\",\"date\":\"$DATE\"}" > version.json
 
+            # Dependencies / Build
             npm ci || npm install
             npm run build || true
 
+            # pm2 reload oder erstmalig starten
             pm2 reload discord-bot || pm2 start index.js --name "discord-bot"
             pm2 save
-
-            
