@@ -516,7 +516,7 @@ client.on('messageCreate', async message => {
     }
   }
   if(isCommand("zitat",message)){
-    let p = Math.round(Math.random*zitate.length);
+    let p = Math.round(Math.random()*zitate.length);
     message.reply(zitate[p]);
   }
 })
