@@ -7,6 +7,7 @@ let MONGOKEY = process.env.MONGOKEY;
 const bilder = require("./bilder.json");
 const maggus = bilder.maggus;
 const rainer = bilder.rainer;
+const zitate = require("./zitate.json").zitate;
 const version = require("./version.json");
 client.login(token)
 
@@ -36,7 +37,8 @@ client.once("clientReady", async() =>{
     {name: "commands", type: discord.ActivityType.Listening},
     {name: "Drachenlord", type: discord.ActivityType.Watching},
     {name: "#general", type: discord.ActivityType.Watching},
-    {name: "Markus Söder singt Sweet Caroline", type: discord.ActivityType.Listening}
+    {name: "Markus Söder singt Sweet Caroline", type: discord.ActivityType.Listening},
+    {name: "Manfents Klo Geschichten", type: discord.ActivityType.Listening}
   ]
   let i = 0;
   client.user.setActivity(activities[i]);
@@ -120,7 +122,6 @@ client.on("voiceStateUpdate", async (oldstate, newstate) => {
         c = c + 1
       } while (c <= (amountOfMsg / 100) + 1)
 
-      console.log(amountOfMsg)
     }
   }
 })
@@ -306,7 +307,6 @@ client.on('messageCreate', async message => {
       message.reply({ embeds: [await insufficientPermission("Ban Members")] });
       return spamLogs.send({ embeds: [embed2] });
     }
-    console.log(u)
     if (u == undefined || u == null || u.id == "424895323660484610" || u.id == message.author.id) {
       return message.reply({ embeds: [await errorEmbed("Nicht ausreichende Angaben", "Du musst auch angeben welchen Ban du anschauen willst \n Dafür kannst du jemanden erwähnen oder seine ID einfügen.")] })
     }
@@ -514,5 +514,9 @@ client.on('messageCreate', async message => {
     } else {
       return message.reply({ embeds: [await insufficientPermission("Supervisor/Manager Rolle")] })
     }
+  }
+  if(isCommand("zitat",message)){
+    let p = Math.round(Math.random*zitate.length);
+    message.reply(zitate[p]);
   }
 })
