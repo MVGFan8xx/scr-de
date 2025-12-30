@@ -272,7 +272,7 @@ client.on('messageCreate', async message => {
       } else {
         message.channel.bulkDelete(args[1]);
       }
-      let chn = await client.channels.fetch(1391876448402407625);
+      let chn = await client.channels.fetch("1391876448402407625");
       chn.send({content: "Brendon hat den nuke command genutzt in <#"+message.channel.id+">. Es wurden "+args[1]+" Nachrichten gecleart."})
     }
   }
