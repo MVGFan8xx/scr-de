@@ -32,18 +32,21 @@ client.on("clientReady", async readyclient => {
   }
 })
 
-client.once("clientReady", async() =>{
+client.once("clientReady", async () => {
   let activities = [
-    {name: "commands", type: discord.ActivityType.Listening},
-    {name: "Drachenlord", type: discord.ActivityType.Watching},
-    {name: "#general", type: discord.ActivityType.Watching},
-    {name: "Markus Söder singt Sweet Caroline", type: discord.ActivityType.Listening},
-    {name: "Manfents Klo Geschichten", type: discord.ActivityType.Listening}
+    { name: "commands", type: discord.ActivityType.Listening },
+    { name: "Drachenlord", type: discord.ActivityType.Watching },
+    { name: "#general", type: discord.ActivityType.Watching },
+    { name: "Callis Internet Aktivitäten", type: discord.ActivityType.Watching },
+    { name: "sneak peeks von Tramlink", type: discord.ActivityType.Watching },
+    { name: "Markus Söder singt Sweet Caroline", type: discord.ActivityType.Listening },
+    { name: "Mikas Inkompetenz", type: discord.ActivityType.Listening },
+    { name: "Manfents Klo Geschichten", type: discord.ActivityType.Listening }
   ]
   let i = 0;
   client.user.setActivity(activities[i]);
   setInterval(() => {
-    i = (i+1)%activities.length;
+    i = (i + 1) % activities.length;
     let act = activities[i];
     client.user.setActivity(act);
   }, 30 * 1000)
@@ -249,6 +252,7 @@ function isCommand(command, message) {
 client.on('messageCreate', async message => {
   if (!message.guild) return;
   if (message.author.bot) return;
+  if (message.author.id == "779388707153117235") return;
   const args = message.content.split(' ');
   let spamLogs = await client.channels.fetch("1367262233905725540");
   let logs = await client.channels.fetch("1367262210060980274");
@@ -308,7 +312,7 @@ client.on('messageCreate', async message => {
       return spamLogs.send({ embeds: [embed2] });
     }
     if (u == undefined || u == null || u.id == "424895323660484610" || u.id == message.author.id) {
-      return message.reply({ embeds: [await errorEmbed("Nicht ausreichende Angaben", "Du musst auch angeben welchen Ban du anschauen willst \n Dafür kannst du jemanden erwähnen oder seine ID einfügen.")] })
+      return message.reply({ embeds: [await errorEmbed("Nicht ausreichende Angaben", "Du musst auch angeben wen du bannen willst \n Dafür kannst du jemanden erwähnen oder seine ID einfügen.")] })
     }
     try {
       let caseNum = 0;
@@ -326,7 +330,7 @@ client.on('messageCreate', async message => {
           _id: caseNum,
           userId: u.id,
           reason: r,
-          time: Math.round(Date.now()/1000),
+          time: Math.round(Date.now() / 1000),
           mod: message.author.id
         }
       );
@@ -343,7 +347,7 @@ client.on('messageCreate', async message => {
           },
           {
             name: "Gebannt von",
-            value: message.author.tag,
+            value: `<@${message.author.id}> (${message.author.tag})`,
             inline: true
           },
           {
@@ -374,7 +378,11 @@ client.on('messageCreate', async message => {
         )
         .setColor("Red")
         .setTimestamp();
-      await u.send({ embeds: [bannedEmbed] });
+      try {
+        await u.send({ embeds: [bannedEmbed] });
+      } catch (err) {
+        await message.reply({embeds: [errorEmbed(`Fehler beim Bannen von <@${u.id}>`,err)]})
+      }
       await u.ban({ reason: r });
     }
     catch (err) {
@@ -509,14 +517,14 @@ client.on('messageCreate', async message => {
               inline: true
             }
           )
-        message.reply({embeds: [embed]});
+        message.reply({ embeds: [embed] });
       }
     } else {
       return message.reply({ embeds: [await insufficientPermission("Supervisor/Manager Rolle")] })
     }
   }
-  if(isCommand("zitat",message)){
-    let p = Math.round(Math.random()*zitate.length);
+  if (isCommand("zitat", message)) {
+    let p = Math.round(Math.random() * zitate.length);
     message.reply(zitate[p]);
   }
 })
