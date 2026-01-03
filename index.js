@@ -109,21 +109,16 @@ client.on("voiceStateUpdate", async (oldstate, newstate) => {
     });
     if (count == 0) {
       let noMic = await client.channels.fetch("1367414015289982986");
+      if (!noMic) { return console.log("Channel doesn't exist.") }
       let amountOfMsg = 0;
-      let lastId = null;
-      let fetched;
 
-      do {
-        fetched = await noMic.messages.fetch({ limit: 100, before: lastId });
-        amountOfMsg += fetched.size;
-        lastId = fetched.last()?.id;
-      } while (fetched.size === 100);
+      while (true) {
+        const fetched = await noMic.messages.fetch({ limit: 100 });
+        if (!fetched.size) break;
 
-      let c = 0;
-      do {
-        noMic.bulkDelete(100);
-        c = c + 1
-      } while (c <= (amountOfMsg / 100) + 1)
+        const deleted = await noMic.bulkDelete(fetched, true);
+        if (!deleted.size) break;
+      }
 
     }
   }
@@ -273,7 +268,7 @@ client.on('messageCreate', async message => {
         message.channel.bulkDelete(args[1]);
       }
       let chn = await client.channels.fetch("1391876448402407625");
-      chn.send({content: "Brendon hat den nuke command genutzt in <#"+message.channel.id+">. Es wurden "+args[1]+" Nachrichten gecleart."})
+      chn.send({ content: "Brendon hat den nuke command genutzt in <#" + message.channel.id + ">. Es wurden " + args[1] + " Nachrichten gecleart." })
     }
   }
   if (isCommand("countMsg", message)) {
@@ -383,7 +378,7 @@ client.on('messageCreate', async message => {
       try {
         await u.send({ embeds: [bannedEmbed] });
       } catch (err) {
-        await message.reply({embeds: [errorEmbed(`Fehler beim Bannen von <@${u.id}>`,err)]})
+        await message.reply({ embeds: [errorEmbed(`Fehler beim Bannen von <@${u.id}>`, err)] })
       }
       await u.ban({ reason: r });
     }
