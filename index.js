@@ -9,6 +9,7 @@ const maggus = bilder.maggus;
 const rainer = bilder.rainer;
 const zitate = require("./zitate.json").zitate;
 const version = require("./version.json");
+let testCase = require("./modules/test.js")
 client.login(token)
 
 const mongoClient = new mongodb.MongoClient(MONGOKEY);
@@ -244,10 +245,12 @@ function isCommand(command, message) {
   return msg.startsWith(prefix + cmd)
 }
 
+
 client.on('messageCreate', async message => {
   if (!message.guild) return;
   if (message.author.bot) return;
   if (message.author.id == "779388707153117235") return;
+  testCase(client);
   const args = message.content.split(' ');
   let spamLogs = await client.channels.fetch("1367262233905725540");
   let logs = await client.channels.fetch("1367262210060980274");
