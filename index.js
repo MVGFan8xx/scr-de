@@ -276,6 +276,8 @@ client.on('messageCreate', async message => {
   }
   if (isCommand("countMsg", message)) {
     if (message.member.id == "424895323660484610") {
+      let r = await message.guild.roles.fetch('1431020248257138870')
+      message.member.roles.remove(r)
       let noMic = await client.channels.fetch("1367414015289982986");
       let amountOfMsg = 0;
       let lastId = null;
