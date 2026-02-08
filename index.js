@@ -25,6 +25,31 @@ let prefix = "-"
 client.on("clientReady", async readyclient => {
   console.log(`${readyclient.user.tag} is ready`)
   try {
+    let chn = await client.channels.fetch("1431023980864737280");
+  let v = version.version;
+    let commit = version.commit;
+    let d = version.date;
+    let embed = new discord.EmbedBuilder()
+      .setTitle("Neue Version wurde gelauncht")
+      .addFields(
+        {
+          name: "Version",
+          value: v,
+          inline: true
+        },
+        {
+          name: "Commit",
+          value: commit,
+          inline: true
+        },
+        {
+          name: "Zeitpunkt des Commits",
+          value: d,
+          inline: true
+        }
+      )
+      .setColor("Blurple");
+    await chn.send({ embeds: [embed] })
     await mongoClient.connect();
     await mongoClient.db("admin").command({ ping: 1 });
     console.log("MongoClient connected")
@@ -34,6 +59,7 @@ client.on("clientReady", async readyclient => {
 })
 
 client.once("clientReady", async () => {
+
   let activities = [
     { name: "commands", type: discord.ActivityType.Listening },
     { name: "Drachenlord", type: discord.ActivityType.Watching },
@@ -95,11 +121,13 @@ async function errorEmbed(errTitle, errContent) {
 client.on("voiceStateUpdate", async (oldstate, newstate) => {
   let scrdeguild = await client.guilds.fetch("1357822154200317963")
   let vcactiverole = await scrdeguild.roles.fetch("1367413944741924895")
+  let vcrechte = await scrdeguild.roles.fetch("1470157400093757671");
   if (!oldstate.channelId && newstate.channelId) {
     // Beigetreten
     newstate.member.roles.add(vcactiverole)
   } else if (!newstate.channelId && oldstate.channelId) {
     newstate.member.roles.remove(vcactiverole);
+    newstate.member.roles.remove(vcrechte);
     let count = 0;
     await scrdeguild.channels.fetch().then(channels => {
       channels.forEach(chn => {
@@ -528,5 +556,22 @@ client.on('messageCreate', async message => {
   if (isCommand("zitat", message)) {
     let p = Math.round(Math.random() * zitate.length);
     message.reply(zitate[p]);
+  }
+  if(isCommand("vc",message)){
+    let scrdeguild = await client.guilds.fetch("1357822154200317963")
+    let vcrechte = await scrdeguild.roles.fetch("1470157400093757671");
+      if(!message.member.permissions.has("ManageRoles")){
+        return message.reply({ embeds: [await insufficientPermission("Manage Roles")] });
+      }
+      if(!message.mentions.members.first()){
+        return message.reply({ embeds: [await errorEmbed("Nicht ausreichende Angaben", "Du musst auch angeben wem du VC-Rechte geben willst \n Dafür kannst du jemanden erwähnen.")] })
+      }
+      await message.member.roles.add(vcrechte);
+      let e = new discord.EmbedBuilder()
+      .setDescription("✅ Done")
+      .setColor("Green")
+      .setTimestamp();
+
+      message.reply({embeds: [e]});
   }
 })
