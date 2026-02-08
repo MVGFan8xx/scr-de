@@ -320,6 +320,13 @@ client.on('messageCreate', async message => {
     }
   }
   if (isCommand("ban", message)) {
+    if(message.reference){
+      let eb = new discord.EmbedBuilder()
+      .setTitle("Fehler")
+      .setColor("Red")
+      .setDescription("❌ Dieser Befehl wird ignoriert, da du auf jemand anderen antwortest.")
+      return message.reply({embeds: [eb]});
+    }
     let u = message.mentions.members.first() || await message.guild.members.fetch(args[1] || "424895323660484610");
     let r = args.slice(2).join(" ") || "Kein Grund angegeben";
     if (!message.member.permissions.has("BanMembers")) {
@@ -566,7 +573,7 @@ client.on('messageCreate', async message => {
       if(!message.mentions.members.first()){
         return message.reply({ embeds: [await errorEmbed("Nicht ausreichende Angaben", "Du musst auch angeben wem du VC-Rechte geben willst \n Dafür kannst du jemanden erwähnen.")] })
       }
-      await message.member.roles.add(vcrechte);
+      await message.mentions.members.first().roles.add(vcrechte);
       let e = new discord.EmbedBuilder()
       .setDescription("✅ Done")
       .setColor("Green")
