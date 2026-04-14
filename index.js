@@ -216,7 +216,7 @@ client.on("messageDelete", async message => {
       },
       {
         name: "Inhalt",
-        value: message.content > 900 ? message.content.substring(0,900)+"...":message.content
+        value: message.content.length > 800 ? message.content.substring(0,800)+"..." : message.content
       })
     .setTimestamp()
     .setThumbnail(message.author.displayAvatarURL({ dynamic: true }))
@@ -251,11 +251,11 @@ client.on("messageUpdate", async (oldMsg, newMsg) => {
       },
       {
         name: "Alter Inhalt",
-        value: oldMsg.content > 450 ? oldMsg.content.substring(0,450)+"...":oldMsg.content || "*Kein Inhalt*"
+        value: oldMsg.content.length > 400 ? oldMsg.content.substring(0,400)+"..." : oldMsg.content || "*Kein Inhalt*"
       },
       {
         name: "Neuer Inhalt",
-        value: newMsg.content > 450 ? newMsg.content.substring(0,450)+"...":newMsg.content || "*Kein Inhalt*"
+        value: newMsg.content.length > 400 ? newMsg.content.substring(0,400)+"..." : newMsg.content || "*Kein Inhalt*"
       })
     .setTimestamp()
     .setThumbnail(oldMsg.author.displayAvatarURL({ dynamic: true }))
