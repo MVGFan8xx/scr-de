@@ -547,7 +547,7 @@ client.on('messageCreate', async message => {
             },
             {
               name: "Grund",
-              value: r
+              value: r.length > 800 ? r.substring(0,800)+"..." : r
             },
             {
               name: "Zeitpunkt",
