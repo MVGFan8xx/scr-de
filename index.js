@@ -112,7 +112,7 @@ async function errorEmbed(errTitle, errContent) {
     .addFields(
       {
         name: "Fehler Code",
-        value: errContent
+        value: errContent.substring(0,900)
       }
     );
   return embed
@@ -216,7 +216,7 @@ client.on("messageDelete", async message => {
       },
       {
         name: "Inhalt",
-        value: message.content
+        value: message.content > 900 ? message.content.substring(0,900)+"...":message.content
       })
     .setTimestamp()
     .setThumbnail(message.author.displayAvatarURL({ dynamic: true }))
@@ -234,6 +234,7 @@ client.on("messageUpdate", async (oldMsg, newMsg) => {
     await oldMsg.fetch();
   };
   if (oldMsg.author.bot) return;
+  if (oldMsg.content == newMsg.content) return;
   let spamLogs = await client.channels.fetch("1367262233905725540");
   let Embed = new discord.EmbedBuilder()
     .setTitle("Nachricht wurde bearbeitet")
@@ -250,11 +251,11 @@ client.on("messageUpdate", async (oldMsg, newMsg) => {
       },
       {
         name: "Alter Inhalt",
-        value: oldMsg.content || "*Kein Inhalt*"
+        value: oldMsg.content > 450 ? oldMsg.content.substring(0,450)+"...":oldMsg.content || "*Kein Inhalt*"
       },
       {
         name: "Neuer Inhalt",
-        value: newMsg.content || "*Kein Inhalt*"
+        value: newMsg.content > 450 ? newMsg.content.substring(0,450)+"...":newMsg.content || "*Kein Inhalt*"
       })
     .setTimestamp()
     .setThumbnail(oldMsg.author.displayAvatarURL({ dynamic: true }))
@@ -394,7 +395,7 @@ client.on('messageCreate', async message => {
           },
           {
             name: "Grund",
-            value: r
+            value: r.length > 800 ? r.substring(0,800) + "...": r
           }
         )
         .setTimestamp();
@@ -580,5 +581,8 @@ client.on('messageCreate', async message => {
       .setTimestamp();
 
       message.reply({embeds: [e]});
+  }
+  if(isCommand("tban",message)){
+    
   }
 })
