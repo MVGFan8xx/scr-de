@@ -26,7 +26,7 @@ client.on("clientReady", async readyclient => {
   console.log(`${readyclient.user.tag} is ready`)
   try {
     let chn = await client.channels.fetch("1431023980864737280");
-  let v = version.version;
+    let v = version.version;
     let commit = version.commit;
     let d = version.date;
     let embed = new discord.EmbedBuilder()
@@ -76,6 +76,12 @@ client.once("clientReady", async () => {
     i = (i + 1) % activities.length;
     let act = activities[i];
     client.user.setActivity(act);
+    try {
+      await mongoClient.db("admin").command({ ping: 1 });
+      console.log("MongoDB verbunden ✅");
+    } catch (err) {
+      console.error("MongoDB Fehler ❌", err);
+    }
   }, 30 * 1000)
 })
 
@@ -112,7 +118,7 @@ async function errorEmbed(errTitle, errContent) {
     .addFields(
       {
         name: "Fehler Code",
-        value: errContent.substring(0,900)
+        value: errContent.substring(0, 900)
       }
     );
   return embed
@@ -216,7 +222,7 @@ client.on("messageDelete", async message => {
       },
       {
         name: "Inhalt",
-        value: message.content.length > 800 ? message.content.substring(0,800)+"..." : message.content
+        value: message.content.length > 800 ? message.content.substring(0, 800) + "..." : message.content
       })
     .setTimestamp()
     .setThumbnail(message.author.displayAvatarURL({ dynamic: true }))
@@ -251,11 +257,11 @@ client.on("messageUpdate", async (oldMsg, newMsg) => {
       },
       {
         name: "Alter Inhalt",
-        value: oldMsg.content.length > 400 ? oldMsg.content.substring(0,400)+"..." : oldMsg.content || "*Kein Inhalt*"
+        value: oldMsg.content.length > 400 ? oldMsg.content.substring(0, 400) + "..." : oldMsg.content || "*Kein Inhalt*"
       },
       {
         name: "Neuer Inhalt",
-        value: newMsg.content.length > 400 ? newMsg.content.substring(0,400)+"..." : newMsg.content || "*Kein Inhalt*"
+        value: newMsg.content.length > 400 ? newMsg.content.substring(0, 400) + "..." : newMsg.content || "*Kein Inhalt*"
       })
     .setTimestamp()
     .setThumbnail(oldMsg.author.displayAvatarURL({ dynamic: true }))
@@ -321,12 +327,12 @@ client.on('messageCreate', async message => {
     }
   }
   if (isCommand("ban", message)) {
-    if(message.reference){
+    if (message.reference) {
       let eb = new discord.EmbedBuilder()
-      .setTitle("Fehler")
-      .setColor("Red")
-      .setDescription("❌ Dieser Befehl wird ignoriert, da du auf jemand anderen antwortest.")
-      return message.reply({embeds: [eb]});
+        .setTitle("Fehler")
+        .setColor("Red")
+        .setDescription("❌ Dieser Befehl wird ignoriert, da du auf jemand anderen antwortest.")
+      return message.reply({ embeds: [eb] });
     }
     let u = message.mentions.members.first() || await message.guild.members.fetch(args[1] || "424895323660484610");
     let r = args.slice(2).join(" ") || "Kein Grund angegeben";
@@ -395,7 +401,7 @@ client.on('messageCreate', async message => {
           },
           {
             name: "Grund",
-            value: r.length > 800 ? r.substring(0,800) + "...": r
+            value: r.length > 800 ? r.substring(0, 800) + "..." : r
           }
         )
         .setTimestamp();
@@ -547,7 +553,7 @@ client.on('messageCreate', async message => {
             },
             {
               name: "Grund",
-              value: r.length > 800 ? r.substring(0,800)+"..." : r
+              value: r.length > 800 ? r.substring(0, 800) + "..." : r
             },
             {
               name: "Zeitpunkt",
@@ -565,24 +571,24 @@ client.on('messageCreate', async message => {
     let p = Math.round(Math.random() * zitate.length);
     message.reply(zitate[p]);
   }
-  if(isCommand("vc",message)){
+  if (isCommand("vc", message)) {
     let scrdeguild = await client.guilds.fetch("1357822154200317963")
     let vcrechte = await scrdeguild.roles.fetch("1470157400093757671");
-      if(!message.member.permissions.has("ManageRoles")){
-        return message.reply({ embeds: [await insufficientPermission("Manage Roles")] });
-      }
-      if(!message.mentions.members.first()){
-        return message.reply({ embeds: [await errorEmbed("Nicht ausreichende Angaben", "Du musst auch angeben wem du VC-Rechte geben willst \n Dafür kannst du jemanden erwähnen.")] })
-      }
-      await message.mentions.members.first().roles.add(vcrechte);
-      let e = new discord.EmbedBuilder()
+    if (!message.member.permissions.has("ManageRoles")) {
+      return message.reply({ embeds: [await insufficientPermission("Manage Roles")] });
+    }
+    if (!message.mentions.members.first()) {
+      return message.reply({ embeds: [await errorEmbed("Nicht ausreichende Angaben", "Du musst auch angeben wem du VC-Rechte geben willst \n Dafür kannst du jemanden erwähnen.")] })
+    }
+    await message.mentions.members.first().roles.add(vcrechte);
+    let e = new discord.EmbedBuilder()
       .setDescription("✅ Done")
       .setColor("Green")
       .setTimestamp();
 
-      message.reply({embeds: [e]});
+    message.reply({ embeds: [e] });
   }
-  if(isCommand("tban",message)){
-    
+  if (isCommand("tban", message)) {
+
   }
 })
