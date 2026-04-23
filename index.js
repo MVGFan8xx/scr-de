@@ -72,16 +72,15 @@ client.once("clientReady", async () => {
   ]
   let i = 0;
   client.user.setActivity(activities[i]);
-  setInterval(async() => {
+  setInterval(() => {
     i = (i + 1) % activities.length;
     let act = activities[i];
     client.user.setActivity(act);
-    try {
-      await mongoClient.db("admin").command({ ping: 1 });
+    mongoClient.db("admin").command({ ping: 1 }).then(() => {
       console.log("MongoDB verbunden ✅");
-    } catch (err) {
+    }).catch((err) => {
       console.error("MongoDB Fehler ❌", err);
-    }
+    });
   }, 30 * 1000)
 })
 
