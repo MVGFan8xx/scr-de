@@ -142,16 +142,20 @@ client.on("voiceStateUpdate", async (oldstate, newstate) => {
       })
     });
     if (count == 0) {
-      let noMic = await client.channels.fetch("1367414015289982986");
-      if (!noMic) { return console.log("Channel doesn't exist.") }
-      let amountOfMsg = 0;
+      try {
+        let noMic = await client.channels.fetch("1367414015289982986");
+        if (!noMic) { return console.log("Channel doesn't exist.") }
+        let amountOfMsg = 0;
 
-      while (true) {
-        const fetched = await noMic.messages.fetch({ limit: 100 });
-        if (!fetched.size) break;
+        while (true) {
+          const fetched = await noMic.messages.fetch({ limit: 100 });
+          if (!fetched.size) break;
 
-        const deleted = await noMic.bulkDelete(fetched, true);
-        if (!deleted.size) break;
+          const deleted = await noMic.bulkDelete(fetched, true);
+          if (!deleted.size) break;
+        }
+      } catch (err) {
+        console.log(err)
       }
 
     }
