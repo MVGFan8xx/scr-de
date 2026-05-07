@@ -38,7 +38,7 @@ jobs:
           default_bump: patch
           tag_prefix: "v"
    deploy:
-    needs: [ci, tag]
+    needs: ci
     if: github.ref == 'refs/heads/main'
     runs-on: ubuntu-latest
     steps:
