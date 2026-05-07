@@ -10,6 +10,7 @@ const rainer = bilder.rainer;
 const zitate = require("./zitate.json").zitate;
 const version = require("./version.json");
 let testCase = require("./modules/test.js")
+let config = require("./config.json")
 client.login(token)
 
 const mongoClient = new mongodb.MongoClient(MONGOKEY);
@@ -25,7 +26,7 @@ let prefix = "-"
 client.on("clientReady", async readyclient => {
   console.log(`${readyclient.user.tag} is ready`)
   try {
-    let chn = await client.channels.fetch("1431023980864737280");
+    let chn = await client.channels.fetch(config.BOTCHANNEL);
     let v = version.version;
     let commit = version.commit;
     let d = version.date;
@@ -124,9 +125,9 @@ async function errorEmbed(errTitle, errContent) {
 }
 
 client.on("voiceStateUpdate", async (oldstate, newstate) => {
-  let scrdeguild = await client.guilds.fetch("1357822154200317963")
-  let vcactiverole = await scrdeguild.roles.fetch("1367413944741924895")
-  let vcrechte = await scrdeguild.roles.fetch("1470157400093757671");
+  let scrdeguild = await client.guilds.fetch(config.SCRDE)
+  let vcactiverole = await scrdeguild.roles.fetch(config.VCACTIVEROLE)
+  let vcrechte = await scrdeguild.roles.fetch(config.VCRECHTEROLE);
   if (!oldstate.channelId && newstate.channelId) {
     // Beigetreten
     newstate.member.roles.add(vcactiverole)
@@ -143,7 +144,7 @@ client.on("voiceStateUpdate", async (oldstate, newstate) => {
     });
     if (count == 0) {
       try {
-        let noMic = await client.channels.fetch("1367414015289982986");
+        let noMic = await client.channels.fetch(config.NOMIC);
         if (!noMic) { return console.log("Channel doesn't exist.") }
         let amountOfMsg = 0;
 
@@ -209,7 +210,7 @@ client.on("guildMemberUpdate", async (oldmem, newmem) => {
 */
 client.on("messageDelete", async message => {
   if (message.author.bot) return;
-  let spamLogs = await client.channels.fetch("1367262233905725540");
+  let spamLogs = await client.channels.fetch(config.SPAMLOGS);
   let Embed = new discord.EmbedBuilder()
     .setTitle("Gelöschte Nachricht")
     .addFields(
@@ -231,7 +232,7 @@ client.on("messageDelete", async message => {
     .setThumbnail(message.author.displayAvatarURL({ dynamic: true }))
     .setColor("Red")
 
-  let ignoredChannels = ["1357822155831640257", "1367262358786801826", "1357823672190242947", "1391876448402407625", "1431023980864737280"]
+  let ignoredChannels = config.INGNOREDCHANNELS
 
   if (!ignoredChannels.find(channelId => message.channelId == channelId) && !message.content.includes("-nuke ")) {
     spamLogs.send({ embeds: [Embed] })
@@ -244,7 +245,7 @@ client.on("messageUpdate", async (oldMsg, newMsg) => {
   };
   if (oldMsg.author.bot) return;
   if (oldMsg.content == newMsg.content) return;
-  let spamLogs = await client.channels.fetch("1367262233905725540");
+  let spamLogs = await client.channels.fetch(config.SPAMLOGS);
   let Embed = new discord.EmbedBuilder()
     .setTitle("Nachricht wurde bearbeitet")
     .addFields(
@@ -270,7 +271,7 @@ client.on("messageUpdate", async (oldMsg, newMsg) => {
     .setThumbnail(oldMsg.author.displayAvatarURL({ dynamic: true }))
     .setColor("Green")
 
-  let ignoredChannels = ["1357822155831640257", "1367262358786801826", "1357823672190242947", "1391876448402407625", "1431023980864737280"]
+  let ignoredChannels = config.INGNOREDCHANNELS
 
   if (!ignoredChannels.find(channelId => oldMsg.channelId == channelId)) {
     spamLogs.send({ embeds: [Embed] })
@@ -290,8 +291,8 @@ client.on('messageCreate', async message => {
   if (message.author.id == "779388707153117235") return;
   testCase(client);
   const args = message.content.split(' ');
-  let spamLogs = await client.channels.fetch("1367262233905725540");
-  let logs = await client.channels.fetch("1367262210060980274");
+  let spamLogs = await client.channels.fetch(config.SPAMLOGS);
+  let logs = await client.channels.fetch(config.LOGS);
   if (isCommand("rainer", message)) {
     let max = rainer.length
     message.reply({ content: rainer[Math.round(Math.random() * max)] })
@@ -302,21 +303,21 @@ client.on('messageCreate', async message => {
   }
   if (isCommand("nuke", message)) {
     message.delete();
-    if (message.member.id == "424895323660484610" && parseFloat(args[1]) > 1) {
+    if (message.member.id == config.OWNER && parseFloat(args[1]) > 1) {
       if (parseFloat(args[1]) > 100) {
         message.channel.bulkDelete(100);
       } else {
         message.channel.bulkDelete(args[1]);
       }
-      let chn = await client.channels.fetch("1391876448402407625");
+      let chn = await client.channels.fetch(config.ADMLOGS);
       chn.send({ content: "Brendon hat den nuke command genutzt in <#" + message.channel.id + ">. Es wurden " + args[1] + " Nachrichten gecleart." })
     }
   }
   if (isCommand("countMsg", message)) {
-    if (message.member.id == "424895323660484610") {
+    if (message.member.id == config.OWNER) {
       let r = await message.guild.roles.fetch('1431020248257138870')
       message.member.roles.remove(r)
-      let noMic = await client.channels.fetch("1367414015289982986");
+      let noMic = await client.channels.fetch(config.NOMIC);
       let amountOfMsg = 0;
       let lastId = null;
       let fetched;
@@ -358,7 +359,7 @@ client.on('messageCreate', async message => {
       message.reply({ embeds: [await insufficientPermission("Ban Members")] });
       return spamLogs.send({ embeds: [embed2] });
     }
-    if (u == undefined || u == null || u.id == "424895323660484610" || u.id == message.author.id) {
+    if (u == undefined || u == null || u.id == config.OWNER || u.id == message.author.id) {
       return message.reply({ embeds: [await errorEmbed("Nicht ausreichende Angaben", "Du musst auch angeben wen du bannen willst \n Dafür kannst du jemanden erwähnen oder seine ID einfügen.")] })
     }
     try {
@@ -574,9 +575,9 @@ client.on('messageCreate', async message => {
     let p = Math.round(Math.random() * zitate.length);
     message.reply(zitate[p]);
   }
-  if (isCommand("vc", message)) {
-    let scrdeguild = await client.guilds.fetch("1357822154200317963")
-    let vcrechte = await scrdeguild.roles.fetch("1470157400093757671");
+  /*if (isCommand("vc", message)) {
+    let scrdeguild = await client.guilds.fetch(config.SCRDE)
+    let vcrechte = await scrdeguild.roles.fetch(config.VCRECHTEROLE);
     if (!message.member.permissions.has("ManageRoles")) {
       return message.reply({ embeds: [await insufficientPermission("Manage Roles")] });
     }
@@ -590,7 +591,7 @@ client.on('messageCreate', async message => {
       .setTimestamp();
 
     message.reply({ embeds: [e] });
-  }
+  }*/
   if (isCommand("tban", message)) {
 
   }
