@@ -127,13 +127,13 @@ async function errorEmbed(errTitle, errContent) {
 client.on("voiceStateUpdate", async (oldstate, newstate) => {
   let scrdeguild = await client.guilds.fetch(config.SCRDE)
   let vcactiverole = await scrdeguild.roles.fetch(config.VCACTIVEROLE)
-  let vcrechte = await scrdeguild.roles.fetch(config.VCRECHTEROLE);
+  //let vcrechte = await scrdeguild.roles.fetch(config.VCRECHTEROLE);
   if (!oldstate.channelId && newstate.channelId) {
     // Beigetreten
     newstate.member.roles.add(vcactiverole)
   } else if (!newstate.channelId && oldstate.channelId) {
     newstate.member.roles.remove(vcactiverole);
-    newstate.member.roles.remove(vcrechte);
+    //newstate.member.roles.remove(vcrechte);
     let count = 0;
     await scrdeguild.channels.fetch().then(channels => {
       channels.forEach(chn => {
@@ -236,6 +236,38 @@ client.on("messageDelete", async message => {
 
   if (!ignoredChannels.find(channelId => message.channelId == channelId) && !message.content.includes("-nuke ")) {
     spamLogs.send({ embeds: [Embed] })
+  }
+})
+
+client.on("guildMemberAdd", async member => {
+  let spamLogs = await client.channels.fetch(config.SPAMLOGS)
+  let Embed = new discord.EmbedBuilder()
+  .setDescription(`<@${member.id}> (${member.displayName}) hat diesen Server betreten.`)
+  .setThumbnail(member.displayAvatarURL({ dynamic: true }))
+  .setTimestamp()
+  .setColor("Green")
+
+  try{
+    spamLogs.send({embeds: [Embed]})
+  }catch(err){
+    let owner = await spamLogs.guild.members.fetch(config.OWNER);
+    owner.send(err)
+  }
+})
+
+client.on("guildMemberRemove", async member => {
+  let spamLogs = await client.channels.fetch(config.SPAMLOGS)
+  let Embed = new discord.EmbedBuilder()
+  .setDescription(`<@${member.id}> (${member.displayName}) hat diesen Server verlassen.`)
+  .setThumbnail(member.displayAvatarURL({ dynamic: true }))
+  .setTimestamp()
+  .setColor("Red")
+
+  try{
+    spamLogs.send({embeds: [Embed]})
+  }catch(err){
+    let owner = await spamLogs.guild.members.fetch(config.OWNER);
+    owner.send(err)
   }
 })
 
@@ -568,7 +600,7 @@ client.on('messageCreate', async message => {
         message.reply({ embeds: [embed] });
       }
     } else {
-      return message.reply({ embeds: [await insufficientPermission("Supervisor/Manager Rolle")] })
+      return message.reply({ embeds: [await insufficientPermission("Supervisor/Manager Role")] })
     }
   }
   if (isCommand("zitat", message)) {
