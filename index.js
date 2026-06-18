@@ -81,33 +81,13 @@ client.once("clientReady", async () => {
 
   let mongoReady = false;
 
-async function connectMongo() {
-    await mongoClient.connect();
-    await mongoClient.db("admin").command({ ping: 1 });
-    mongoReady = true;
-    console.log("MongoDB verbunden");
-}
-
-setInterval(async () => {
-    if (!mongoReady) return;
-
+  setInterval(async () => {
     try {
-        await mongoClient.db("admin").command({ ping: 1 });
-        console.log("MongoDB Ping OK");
-    } catch (err) {
-        mongoReady = false;
-        console.error("MongoDB Ping fehlgeschlagen:", err.message);
-
-        try {
-            await mongoClient.connect();
-            await mongoClient.db("admin").command({ ping: 1 });
-            mongoReady = true;
-            console.log("MongoDB reconnect OK");
-        } catch (reconnectErr) {
-            console.error("MongoDB reconnect fehlgeschlagen:", reconnectErr.message);
-        }
+      await mongoClient.db("admin").command({ ping: 1 });
+    } catch {
+      await mongoClient.connect();
     }
-}, 5 * 60 * 1000);
+  }, 5 * 60 * 1000);
 })
 
 const express = require('express')
@@ -267,14 +247,14 @@ client.on("messageDelete", async message => {
 client.on("guildMemberAdd", async member => {
   let spamLogs = await client.channels.fetch(config.SPAMLOGS)
   let Embed = new discord.EmbedBuilder()
-  .setDescription(`<@${member.id}> (${member.displayName}) hat diesen Server betreten.`)
-  .setThumbnail(member.displayAvatarURL({ dynamic: true }))
-  .setTimestamp()
-  .setColor("Green")
+    .setDescription(`<@${member.id}> (${member.displayName}) hat diesen Server betreten.`)
+    .setThumbnail(member.displayAvatarURL({ dynamic: true }))
+    .setTimestamp()
+    .setColor("Green")
 
-  try{
-    spamLogs.send({embeds: [Embed]})
-  }catch(err){
+  try {
+    spamLogs.send({ embeds: [Embed] })
+  } catch (err) {
     let owner = await spamLogs.guild.members.fetch(config.OWNER);
     owner.send(err)
   }
@@ -283,14 +263,14 @@ client.on("guildMemberAdd", async member => {
 client.on("guildMemberRemove", async member => {
   let spamLogs = await client.channels.fetch(config.SPAMLOGS)
   let Embed = new discord.EmbedBuilder()
-  .setDescription(`<@${member.id}> (${member.displayName}) hat diesen Server verlassen.`)
-  .setThumbnail(member.displayAvatarURL({ dynamic: true }))
-  .setTimestamp()
-  .setColor("Red")
+    .setDescription(`<@${member.id}> (${member.displayName}) hat diesen Server verlassen.`)
+    .setThumbnail(member.displayAvatarURL({ dynamic: true }))
+    .setTimestamp()
+    .setColor("Red")
 
-  try{
-    spamLogs.send({embeds: [Embed]})
-  }catch(err){
+  try {
+    spamLogs.send({ embeds: [Embed] })
+  } catch (err) {
     let owner = await spamLogs.guild.members.fetch(config.OWNER);
     owner.send(err)
   }
