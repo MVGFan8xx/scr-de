@@ -50,10 +50,10 @@ client.on("clientReady", async readyclient => {
         }
       )
       .setColor("Blurple");
-    await chn.send({ embeds: [embed] })
     await mongoClient.connect();
     await mongoClient.db("admin").command({ ping: 1 });
-    console.log("MongoClient connected")
+    console.log("MongoClient connected");
+    await chn.send({ embeds: [embed] });
   } catch (err) {
     console.log(err);
   }
@@ -79,15 +79,18 @@ client.once("clientReady", async () => {
     client.user.setActivity(act);
   }, 30 * 1000)
 
-  let mongoReady = false;
-
   setInterval(async () => {
     try {
       await mongoClient.db("admin").command({ ping: 1 });
       console.log("Success")
-    } catch(err) {
-      await mongoClient.connect();
-      console.warn(err)
+    } catch (err) {
+      console.warn(err);
+
+      try {
+        await mongoClient.connect();
+      } catch (reconnectErr) {
+        console.error(reconnectErr);
+      }
     }
   }, 5 * 60 * 1000);
 })
@@ -125,7 +128,7 @@ async function errorEmbed(errTitle, errContent) {
     .addFields(
       {
         name: "Fehler Code",
-        value: errContent.substring(0, 900)
+        value: String(errContent).substring(0, 900)
       }
     );
   return embed
@@ -137,9 +140,9 @@ client.on("voiceStateUpdate", async (oldstate, newstate) => {
   //let vcrechte = await scrdeguild.roles.fetch(config.VCRECHTEROLE);
   if (!oldstate.channelId && newstate.channelId) {
     // Beigetreten
-    newstate.member.roles.add(vcactiverole)
+    await newstate.member.roles.add(vcactiverole)
   } else if (!newstate.channelId && oldstate.channelId) {
-    newstate.member.roles.remove(vcactiverole);
+    await newstate.member.roles.remove(vcactiverole);
     //newstate.member.roles.remove(vcrechte);
     let count = 0;
     await scrdeguild.channels.fetch().then(channels => {
@@ -153,14 +156,19 @@ client.on("voiceStateUpdate", async (oldstate, newstate) => {
       try {
         let noMic = await client.channels.fetch(config.NOMIC);
         if (!noMic) { return console.log("Channel doesn't exist.") }
-        let amountOfMsg = 0;
+        let lastId;
 
         while (true) {
-          const fetched = await noMic.messages.fetch({ limit: 100 });
+          const fetched = await noMic.messages.fetch({
+            limit: 100,
+            before: lastId
+          });
+
           if (!fetched.size) break;
 
-          const deleted = await noMic.bulkDelete(fetched, true);
-          if (!deleted.size) break;
+          await noMic.bulkDelete(fetched, true);
+
+          lastId = fetched.last().id;
         }
       } catch (err) {
         console.log(err)
@@ -265,7 +273,7 @@ client.on("guildMemberAdd", async member => {
 client.on("guildMemberRemove", async member => {
   let spamLogs = await client.channels.fetch(config.SPAMLOGS)
   let Embed = new discord.EmbedBuilder()
-    .setDescription(`<@${member.id}> (${member.displayName}) hat diesen Server verlassen.`)
+    .setDescription(`<@${member.id}> (${member.displayName || member.user.tag}) hat diesen Server verlassen.`)
     .setThumbnail(member.displayAvatarURL({ dynamic: true }))
     .setTimestamp()
     .setColor("Red")
@@ -282,6 +290,9 @@ client.on("messageUpdate", async (oldMsg, newMsg) => {
   if (oldMsg.partial) {
     await oldMsg.fetch();
   };
+  if (newMsg.partial) {
+    await newMsg.fetch();
+  }
   if (oldMsg.author.bot) return;
   if (oldMsg.content == newMsg.content) return;
   let spamLogs = await client.channels.fetch(config.SPAMLOGS);
@@ -326,6 +337,7 @@ function isCommand(command, message) {
 
 client.on('messageCreate', async message => {
   if (!message.guild) return;
+  if (!message.author) return;
   if (message.author.bot) return;
   if (message.author.id == "779388707153117235") return;
   testCase(client);
@@ -333,12 +345,10 @@ client.on('messageCreate', async message => {
   let spamLogs = await client.channels.fetch(config.SPAMLOGS);
   let logs = await client.channels.fetch(config.LOGS);
   if (isCommand("rainer", message)) {
-    let max = rainer.length
-    message.reply({ content: rainer[Math.round(Math.random() * max)] })
+    message.reply({ content: rainer[Math.floor(Math.random() * rainer.length)] })
   }
   if (isCommand("maggus", message)) {
-    let max = maggus.length
-    message.reply({ content: maggus[Math.round(Math.random() * max)] })
+    message.reply({ content: maggus[Math.floor(Math.random() * maggus.length)] })
   }
   if (isCommand("nuke", message)) {
     message.delete();
@@ -377,7 +387,16 @@ client.on('messageCreate', async message => {
         .setDescription("❌ Dieser Befehl wird ignoriert, da du auf jemand anderen antwortest.")
       return message.reply({ embeds: [eb] });
     }
-    let u = message.mentions.members.first() || await message.guild.members.fetch(args[1] || "424895323660484610");
+    let u;
+
+    try {
+      u = message.mentions.members.first() || await message.guild.members.fetch(args[1]);
+    } catch {
+      return message.reply({
+        embeds: [await errorEmbed("Nicht ausreichende Angaben", "Du musst eine gültige Nutzer-ID oder Mention angeben.")]
+      });
+    }
+    
     let r = args.slice(2).join(" ") || "Kein Grund angegeben";
     if (!message.member.permissions.has("BanMembers")) {
       let embed2 = new discord.EmbedBuilder()
@@ -468,7 +487,7 @@ client.on('messageCreate', async message => {
       try {
         await u.send({ embeds: [bannedEmbed] });
       } catch (err) {
-        await message.reply({ embeds: [errorEmbed(`Fehler beim Bannen von <@${u.id}>`, err)] })
+        await message.reply({ embeds: [await errorEmbed(`Fehler beim Bannen von <@${u.id}>`, err)] })
       }
       await u.ban({ reason: r });
     }
@@ -503,7 +522,7 @@ client.on('messageCreate', async message => {
       "<@603610519857004544>"
     ]
     let chance = Math.random()
-    let item = t[Math.round(chance * t.length)];
+    let item = t[Math.floor(Math.random() * t.length)];
     if (message.author.id == "779388707153117235") {
       message.reply("Hallo Goonli");
     } else {
@@ -611,8 +630,8 @@ client.on('messageCreate', async message => {
     }
   }
   if (isCommand("zitat", message)) {
-    let p = Math.round(Math.random() * zitate.length);
-    message.reply(zitate[p]);
+    let p = zitate[Math.floor(Math.random() * zitate.length)];
+    message.reply(p);
   }
   /*if (isCommand("vc", message)) {
     let scrdeguild = await client.guilds.fetch(config.SCRDE)
