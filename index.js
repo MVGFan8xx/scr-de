@@ -84,8 +84,10 @@ client.once("clientReady", async () => {
   setInterval(async () => {
     try {
       await mongoClient.db("admin").command({ ping: 1 });
-    } catch {
+      console.log("Success")
+    } catch(err) {
       await mongoClient.connect();
+      console.warn(err)
     }
   }, 5 * 60 * 1000);
 })
