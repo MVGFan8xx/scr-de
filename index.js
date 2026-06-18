@@ -77,12 +77,37 @@ client.once("clientReady", async () => {
     i = (i + 1) % activities.length;
     let act = activities[i];
     client.user.setActivity(act);
-    mongoClient.db("admin").command({ ping: 1 }).then(() => {
-      console.log("MongoDB verbunden ✅");
-    }).catch((err) => {
-      console.error("MongoDB Fehler ❌", err);
-    });
   }, 30 * 1000)
+
+  let mongoReady = false;
+
+async function connectMongo() {
+    await mongoClient.connect();
+    await mongoClient.db("admin").command({ ping: 1 });
+    mongoReady = true;
+    console.log("MongoDB verbunden");
+}
+
+setInterval(async () => {
+    if (!mongoReady) return;
+
+    try {
+        await mongoClient.db("admin").command({ ping: 1 });
+        console.log("MongoDB Ping OK");
+    } catch (err) {
+        mongoReady = false;
+        console.error("MongoDB Ping fehlgeschlagen:", err.message);
+
+        try {
+            await mongoClient.connect();
+            await mongoClient.db("admin").command({ ping: 1 });
+            mongoReady = true;
+            console.log("MongoDB reconnect OK");
+        } catch (reconnectErr) {
+            console.error("MongoDB reconnect fehlgeschlagen:", reconnectErr.message);
+        }
+    }
+}, 5 * 60 * 1000);
 })
 
 const express = require('express')
