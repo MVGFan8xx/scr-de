@@ -396,7 +396,7 @@ client.on('messageCreate', async message => {
         embeds: [await errorEmbed("Nicht ausreichende Angaben", "Du musst eine gültige Nutzer-ID oder Mention angeben.")]
       });
     }
-    
+
     let r = args.slice(2).join(" ") || "Kein Grund angegeben";
     if (!message.member.permissions.has("BanMembers")) {
       let embed2 = new discord.EmbedBuilder()
@@ -496,6 +496,9 @@ client.on('messageCreate', async message => {
     }
   }
   if (isCommand("help", message)) {
+    if (message.author.id == "1321915207437647967") {
+      return message.reply({ embeds: [await errorEmbed("Schwerkraftfehler", "Die Anfrage ist nach unten gefallen und konnte nicht mehr gefunden werden.")] })
+    }
     let t = [
       "Leck Eier",
       "Leck meine Eier",
