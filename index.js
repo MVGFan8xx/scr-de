@@ -339,7 +339,6 @@ client.on('messageCreate', async message => {
   if (!message.guild) return;
   if (!message.author) return;
   if (message.author.bot) return;
-  if (message.author.id == "779388707153117235") return;
   testCase(client);
   const args = message.content.split(' ');
   let spamLogs = await client.channels.fetch(config.SPAMLOGS);
