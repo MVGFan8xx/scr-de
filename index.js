@@ -497,7 +497,7 @@ client.on('messageCreate', async message => {
   }
   if (isCommand("help", message)) {
     if (message.author.id == "1321915207437647967") {
-      return message.reply({ embeds: [await errorEmbed("Schwerkraftfehler", "Die Anfrage ist nach unten gefallen und konnte nicht mehr gefunden werden.")] })
+      return message.reply({ embeds: [await errorEmbed("Gesundheitsprüfung fehlgeschlagen", "Die Ausführung dieses Befehls setzt eine rauchfreie Lunge voraus.")] })
     }
     let t = [
       "Leck Eier",
