@@ -223,6 +223,265 @@ client.on("guildMemberUpdate", async (oldmem, newmem) => {
   }
 })
 */
+
+client.on("interactionCreate", async interaction => {
+  if (!interaction.isChatInputCommand()) return;
+
+  if (interaction.commandName === "createmessage") {
+
+    // Permission
+    if (interaction.user.id !== "424895323660484610") {
+      return interaction.reply({
+        content: "You are not permitted to use this command.",
+        ephemeral: true
+      });
+    }
+
+    let type = interaction.options.getString("type");
+    let date = interaction.options.getString("date");
+    let time = interaction.options.getString("time");
+    let host = interaction.options.getString("host");
+    let cohost1 = interaction.options.getString("cohost1");
+    let cohost2 = interaction.options.getString("cohost2");
+    let passcode = interaction.options.getInteger("passcode").toString().padStart(4, "0");
+
+    // Datum aufteilen
+    let [day, month, year] = date.split("/").map(Number);
+    let [hour, minute] = time.split(":").map(Number);
+
+    if (
+      !day || !month || !year ||
+      hour === undefined || minute === undefined ||
+      month < 1 || month > 12 ||
+      day < 1 || day > 31 ||
+      hour < 0 || hour > 23 ||
+      minute < 0 || minute > 59
+    ) {
+      return interaction.reply({
+        content: "Invalid date or time. Use `DD/MM/YYYY` and `HH:MM`.",
+        ephemeral: true
+      });
+    }
+
+    /*
+     * BST bestimmen
+     *
+     * BST beginnt am letzten Sonntag im März
+     * BST endet am letzten Sonntag im Oktober
+     */
+
+    let lastSundayMarch = new Date(Date.UTC(year, 2, 31));
+    lastSundayMarch.setUTCDate(
+      31 - lastSundayMarch.getUTCDay()
+    );
+
+    let lastSundayOctober = new Date(Date.UTC(year, 9, 31));
+    lastSundayOctober.setUTCDate(
+      31 - lastSundayOctober.getUTCDay()
+    );
+
+    // Erst einmal eingegebene Zeit als UTC behandeln
+    let enteredTime = Date.UTC(
+      year,
+      month - 1,
+      day,
+      hour,
+      minute
+    );
+
+    let bstStart = Date.UTC(
+      year,
+      2,
+      lastSundayMarch.getUTCDate(),
+      1,
+      0
+    );
+
+    let bstEnd = Date.UTC(
+      year,
+      9,
+      lastSundayOctober.getUTCDate(),
+      1,
+      0
+    );
+
+    let isBST =
+      enteredTime >= bstStart &&
+      enteredTime < bstEnd;
+
+    /*
+     * Wenn die eingegebene Zeit BST ist,
+     * liegt UTC eine Stunde dahinter.
+     */
+    let utcTime = Date.UTC(
+      year,
+      month - 1,
+      day,
+      hour - (isBST ? 1 : 0),
+      minute
+    );
+
+    let timestamp = Math.floor(utcTime / 1000);
+
+    let timezone = isBST ? "BST" : "GMT";
+
+    let trainingType =
+      type === "practical"
+        ? "Practical"
+        : "Assessment";
+
+    // Ein zusätzlicher Assessor = insgesamt 8 Slots
+    let slots = cohost1 ? 8 : 4;
+
+
+    // -----------------------
+    // ANNOUNCEMENT
+    // -----------------------
+
+    let announcement =
+      `## :SG: ${trainingType} Training
+- :calendar_spiral: **Date & Time:** <t:${timestamp}:F> (<t:${timestamp}:R>)
+- :bust_in_silhouette: **Training Host:** :SV: <@${host}>`;
+
+    if (cohost1 && cohost2) {
+      announcement += `
+- :busts_in_silhouette: **Co-Hosts:** :SV: <@${cohost1}> and :SV: <@${cohost2}>`;
+    } else if (cohost1) {
+      announcement += `
+- :bust_in_silhouette: **Co-Host:** :SV: <@${cohost1}>`;
+    }
+
+    announcement += `
+
+There are **${slots}** training slots currently available for this session.`;
+
+
+
+    // -----------------------
+    // THREAD TITLE
+    // -----------------------
+
+    let threadTitle =
+      `${date} ${time} ${timezone} - ${trainingType} - BrendonAndVirtues`;
+
+
+
+    // -----------------------
+    // SLOTS MESSAGE
+    // -----------------------
+
+    let slotsMessage = "";
+
+    if (type === "practical") {
+
+      let slotLines = "";
+
+      for (let i = 0; i < slots; i++) {
+        slotLines += "-\n";
+      }
+
+      slotsMessage =
+        `## Available Slots
+${slotLines}
+## Information
+- To sign up, send an **unedited** message in the thread using the format posted in #signaller-training.
+  - **You __must__ ensure you have __watched__ the Signalling Demonstration Video __before__ this session begins.**
+- Slots operate on a first-come-first served basis.
+  - Trainees who have **not** passed a Practical are **prioritised** over trainees who have.
+- Please keep messages in the thread limited to sign-ups, cancellations, and questions related to the training.
+- If you can no longer attend, send a message in the thread pinging me to cancel.
+- This training may take **up to** 2 hours at a maximum, so please plan for the worst case scenario.
+- The passcode for this training is ${passcode}.`;
+
+    } else if (type === "assessment") {
+
+      let hostSlots = "";
+      let cohostSlots = "";
+
+      for (let i = 0; i < 4; i++) {
+
+        let startMinutes = hour * 60 + minute + (i * 15);
+        let endMinutes = startMinutes + 15;
+
+        let startHour = Math.floor(startMinutes / 60) % 24;
+        let startMinute = startMinutes % 60;
+
+        let endHour = Math.floor(endMinutes / 60) % 24;
+        let endMinute = endMinutes % 60;
+
+        let start =
+          String(startHour).padStart(2, "0") +
+          ":" +
+          String(startMinute).padStart(2, "0");
+
+        let end =
+          String(endHour).padStart(2, "0") +
+          ":" +
+          String(endMinute).padStart(2, "0");
+
+        hostSlots += `- ${start} - ${end}:\n`;
+
+        if (cohost1) {
+          cohostSlots += `- ${start} - ${end}:\n`;
+        }
+      }
+
+      slotsMessage =
+        `## Available Slots
+With :SV: <@${host}>:
+${hostSlots}`;
+
+      if (cohost1) {
+        slotsMessage += `
+With :SV: <@${cohost1}>:
+${cohostSlots}`;
+      }
+
+      slotsMessage += `
+## Information
+- To sign up, send an **unedited** message in the thread using the format posted in #signaller-training.
+  - **You __must__ have __passed__ a Practical session to sign up.**
+  - Please wait until your Practical has concluded (Training Thread being locked and closed and the announcement message being deleted) before posting a sign-up message to allow for our internal database to be updated.
+- Slots operate on a first-come-first served basis. Slots may overrun, so please plan for your slot being a few minutes late.
+- Please keep messages in the thread limited to sign-ups, cancellations, and questions related to the training.
+- If you can no longer attend, send a message in the thread pinging me to cancel.
+- It is recommended that you practice before your Assessment, to give yourself the best chance of passing. Even just practicing the setups will help you get into the mindset.
+- You will have the option to choose from the following zones for your assessment: Zones **1**, **2**, **3**, **5**, **6**, **7**, **9** and **10**. Your assessor will ask for your choice before your Assessment begins.
+- You have 4 attempts to pass an Assessment. Upon failing your 3rd Assessment, you will be required to **attend and pass** another Practical before attempting your 4th Assessment.
+- The passcode for this training is ${passcode}.`;
+    }
+
+
+    // -----------------------
+    // OUTPUT
+    // -----------------------
+
+    await interaction.reply({
+      content:
+        `**Announcement**
+\`\`\`md
+${announcement}
+\`\`\`
+
+**Thread Title**
+\`\`\`
+${threadTitle}
+\`\`\``,
+      ephemeral: true
+    });
+
+    await interaction.followUp({
+      content:
+        `**Slots Message**
+\`\`\`md
+${slotsMessage}
+\`\`\``,
+      ephemeral: true
+    });
+  }
+});
+
+
 client.on("messageDelete", async message => {
   if (message.author.bot) return;
   let spamLogs = await client.channels.fetch(config.SPAMLOGS);

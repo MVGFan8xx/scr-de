@@ -1,3 +1,4 @@
 .env
 *.pem
 version.json
+deploy-commands.js
