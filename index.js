@@ -340,7 +340,7 @@ client.on("interactionCreate", async interaction => {
 
     let announcement =
       `## :SG: ${trainingType} Training
-- :calendar_spiral: **Date & Time:** <t:${timestamp}:F> (<t:${timestamp}:R>)
+- :calendar_spiral: **Date & Time:** ${date} @ ${time} (<t:${timestamp}:R>)
 - :bust_in_silhouette: **Training Host:** :SV: <@${host}>`;
 
     if (cohost1 && cohost2) {
@@ -353,7 +353,9 @@ client.on("interactionCreate", async interaction => {
 
     announcement += `
 
-There are **${slots}** training slots currently available for this session.`;
+There are **${slots}** training slots currently available for this session.
+
+-# The remainder displayed is in YOUR timezone.`;
 
 
 
