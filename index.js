@@ -757,7 +757,7 @@ client.on('messageCreate', async message => {
   }
   if (isCommand("help", message)) {
     if (message.author.id == "1321915207437647967") {
-      return message.reply({ embeds: [await errorEmbed("Gesundheitsprüfung fehlgeschlagen", "Die Ausführung dieses Befehls setzt eine rauchfreie Lunge voraus.")] })
+      return message.reply({ embeds: [await errorEmbed("Quizprüfung fehlgeschlagen", "Du musst das Quiz bestehen um diesen Command ausführen zu dürfen.")] })
     }
     let t = [
       "Leck Eier",
