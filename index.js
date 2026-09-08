@@ -229,7 +229,6 @@ client.on("interactionCreate", async interaction => {
 
   if (interaction.commandName === "createmessage") {
 
-    // Permission
     if (interaction.user.id !== "424895323660484610") {
       return interaction.reply({
         content: "You are not permitted to use this command.",
@@ -240,12 +239,19 @@ client.on("interactionCreate", async interaction => {
     let type = interaction.options.getString("type");
     let date = interaction.options.getString("date");
     let time = interaction.options.getString("time");
-    let host = interaction.options.getString("host");
     let cohost1 = interaction.options.getString("cohost1");
     let cohost2 = interaction.options.getString("cohost2");
-    let passcode = interaction.options.getInteger("passcode").toString().padStart(4, "0");
 
-    // Datum aufteilen
+    let passcode = interaction.options
+      .getInteger("passcode")
+      .toString()
+      .padStart(4, "0");
+
+    // Host ist immer BrendonAndVirtues
+    let host = "424895323660484610";
+    let hostName = "BrendonAndVirtues";
+
+    // Datum / Zeit aufteilen
     let [day, month, year] = date.split("/").map(Number);
     let [hour, minute] = time.split(":").map(Number);
 
@@ -263,24 +269,32 @@ client.on("interactionCreate", async interaction => {
       });
     }
 
-    /*
-     * BST bestimmen
-     *
-     * BST beginnt am letzten Sonntag im März
-     * BST endet am letzten Sonntag im Oktober
-     */
+    // Prüfen, ob das Datum tatsächlich existiert
+    let checkDate = new Date(Date.UTC(year, month - 1, day));
 
+    if (
+      checkDate.getUTCFullYear() !== year ||
+      checkDate.getUTCMonth() !== month - 1 ||
+      checkDate.getUTCDate() !== day
+    ) {
+      return interaction.reply({
+        content: "That date does not exist.",
+        ephemeral: true
+      });
+    }
+
+    // BST beginnt am letzten Sonntag im März
     let lastSundayMarch = new Date(Date.UTC(year, 2, 31));
     lastSundayMarch.setUTCDate(
       31 - lastSundayMarch.getUTCDay()
     );
 
+    // BST endet am letzten Sonntag im Oktober
     let lastSundayOctober = new Date(Date.UTC(year, 9, 31));
     lastSundayOctober.setUTCDate(
       31 - lastSundayOctober.getUTCDay()
     );
 
-    // Erst einmal eingegebene Zeit als UTC behandeln
     let enteredTime = Date.UTC(
       year,
       month - 1,
@@ -309,10 +323,6 @@ client.on("interactionCreate", async interaction => {
       enteredTime >= bstStart &&
       enteredTime < bstEnd;
 
-    /*
-     * Wenn die eingegebene Zeit BST ist,
-     * liegt UTC eine Stunde dahinter.
-     */
     let utcTime = Date.UTC(
       year,
       month - 1,
@@ -322,7 +332,6 @@ client.on("interactionCreate", async interaction => {
     );
 
     let timestamp = Math.floor(utcTime / 1000);
-
     let timezone = isBST ? "BST" : "GMT";
 
     let trainingType =
@@ -330,7 +339,8 @@ client.on("interactionCreate", async interaction => {
         ? "Practical"
         : "Assessment";
 
-    // Ein zusätzlicher Assessor = insgesamt 8 Slots
+    // Host = erster Assessor
+    // Co-Host 1 = zweiter Assessor
     let slots = cohost1 ? 8 : 4;
 
 
@@ -338,10 +348,21 @@ client.on("interactionCreate", async interaction => {
     // ANNOUNCEMENT
     // -----------------------
 
-    let announcement =
-      `## :SG: ${trainingType} Training
-- :calendar_spiral: **Date & Time:** ${date} @ ${time} (<t:${timestamp}:R>)
+    let announcement = "";
+
+    if (type === "practical") {
+      announcement =
+`##
+- :calendar_spiral: **Date & Time:** ${date} @ ${time} ${timezone} (<t:${timestamp}:R>)
 - :bust_in_silhouette: **Training Host:** :SV: <@${host}>`;
+    }
+
+    if (type === "assessment") {
+      announcement =
+`## :SG: Assessment Training
+- :calendar_spiral: **Date & Time:** ${date} @ ${time} ${timezone} (<t:${timestamp}:R>)
+- :bust_in_silhouette: **Training Host:** :SV: <@${host}>`;
+    }
 
     if (cohost1 && cohost2) {
       announcement += `
@@ -358,14 +379,12 @@ There are **${slots}** training slots currently available for this session.
 -# The remainder displayed is in YOUR timezone.`;
 
 
-
     // -----------------------
     // THREAD TITLE
     // -----------------------
 
     let threadTitle =
-      `${date} ${time} ${timezone} - ${trainingType} - BrendonAndVirtues`;
-
+      `${date} ${time} ${timezone} - ${trainingType} - ${hostName}`;
 
 
     // -----------------------
@@ -379,11 +398,11 @@ There are **${slots}** training slots currently available for this session.
       let slotLines = "";
 
       for (let i = 0; i < slots; i++) {
-        slotLines += "-\n";
+        slotLines += "- \n";
       }
 
       slotsMessage =
-        `## Available Slots
+`## Available Slots
 ${slotLines}
 ## Information
 - To sign up, send an **unedited** message in the thread using the format posted in #signaller-training.
@@ -402,14 +421,25 @@ ${slotLines}
 
       for (let i = 0; i < 4; i++) {
 
-        let startMinutes = hour * 60 + minute + (i * 15);
-        let endMinutes = startMinutes + 15;
+        let startMinutes =
+          hour * 60 +
+          minute +
+          (i * 15);
 
-        let startHour = Math.floor(startMinutes / 60) % 24;
-        let startMinute = startMinutes % 60;
+        let endMinutes =
+          startMinutes + 15;
 
-        let endHour = Math.floor(endMinutes / 60) % 24;
-        let endMinute = endMinutes % 60;
+        let startHour =
+          Math.floor(startMinutes / 60) % 24;
+
+        let startMinute =
+          startMinutes % 60;
+
+        let endHour =
+          Math.floor(endMinutes / 60) % 24;
+
+        let endMinute =
+          endMinutes % 60;
 
         let start =
           String(startHour).padStart(2, "0") +
@@ -421,15 +451,17 @@ ${slotLines}
           ":" +
           String(endMinute).padStart(2, "0");
 
-        hostSlots += `- ${start} - ${end}:\n`;
+        hostSlots +=
+          `- Slot ${i + 1}: ${start} - ${end}:\n`;
 
         if (cohost1) {
-          cohostSlots += `- ${start} - ${end}:\n`;
+          cohostSlots +=
+            `- Slot ${i + 1}: ${start} - ${end}:\n`;
         }
       }
 
       slotsMessage =
-        `## Available Slots
+`## Available Slots
 With :SV: <@${host}>:
 ${hostSlots}`;
 
@@ -460,7 +492,7 @@ ${cohostSlots}`;
 
     await interaction.reply({
       content:
-        `**Announcement**
+`**Announcement**
 \`\`\`md
 ${announcement}
 \`\`\`
@@ -474,7 +506,7 @@ ${threadTitle}
 
     await interaction.followUp({
       content:
-        `**Slots Message**
+`**Slots Message**
 \`\`\`md
 ${slotsMessage}
 \`\`\``,
