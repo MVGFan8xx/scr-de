@@ -82,7 +82,6 @@ client.once("clientReady", async () => {
   setInterval(async () => {
     try {
       await mongoClient.db("admin").command({ ping: 1 });
-      console.log("Success")
     } catch (err) {
       console.warn(err);
 
@@ -147,8 +146,10 @@ client.on("voiceStateUpdate", async (oldstate, newstate) => {
     let count = 0;
     await scrdeguild.channels.fetch().then(channels => {
       channels.forEach(chn => {
-        if (chn.isVoiceBased()) {
-          count = count + chn.members.size;
+        if (chn != null) {
+          if (chn.isVoiceBased()) {
+            count = count + chn.members.size;
+          }
         }
       })
     });
@@ -352,14 +353,14 @@ client.on("interactionCreate", async interaction => {
 
     if (type === "practical") {
       announcement =
-`##
+        `## :SG: Practical Training
 - :calendar_spiral: **Date & Time:** ${date} @ ${time} ${timezone} (<t:${timestamp}:R>)
 - :bust_in_silhouette: **Training Host:** :SV: <@${host}>`;
     }
 
     if (type === "assessment") {
       announcement =
-`## :SG: Assessment Training
+        `## :SG: Assessment Training
 - :calendar_spiral: **Date & Time:** ${date} @ ${time} ${timezone} (<t:${timestamp}:R>)
 - :bust_in_silhouette: **Training Host:** :SV: <@${host}>`;
     }
@@ -402,7 +403,7 @@ There are **${slots}** training slots currently available for this session.
       }
 
       slotsMessage =
-`## Available Slots
+        `## Available Slots
 ${slotLines}
 ## Information
 - To sign up, send an **unedited** message in the thread using the format posted in #signaller-training.
@@ -461,7 +462,7 @@ ${slotLines}
       }
 
       slotsMessage =
-`## Available Slots
+        `## Available Slots
 With :SV: <@${host}>:
 ${hostSlots}`;
 
@@ -492,7 +493,7 @@ ${cohostSlots}`;
 
     await interaction.reply({
       content:
-`**Announcement**
+        `**Announcement**
 \`\`\`md
 ${announcement}
 \`\`\`
@@ -506,7 +507,7 @@ ${threadTitle}
 
     await interaction.followUp({
       content:
-`**Slots Message**
+        `**Slots Message**
 \`\`\`md
 ${slotsMessage}
 \`\`\``,
